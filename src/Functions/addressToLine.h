@@ -34,6 +34,10 @@ public:
 
     size_t getNumberOfArguments() const override { return 1; }
 
+    /// Resolved against the executing node's own binary, like `buildId`.
+    bool isDeterministic() const override { return false; }
+    bool isServerConstant() const override { return true; }
+
     bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }
 
     DataTypePtr getReturnTypeImpl(const ColumnsWithTypeAndName & arguments) const override
@@ -85,6 +89,10 @@ protected:
 
     ResultT impl(uintptr_t addr) const
     {
+        /// 0 is the stored form of frames outside the main executable.
+        if (!addr)
+            return {};
+
         const SymbolIndex & symbol_index = SymbolIndex::instance();
 
         if (const auto * object = symbol_index.thisObject())
